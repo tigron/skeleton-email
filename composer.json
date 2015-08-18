@@ -1,0 +1,22 @@
+{
+    "name": "tigron/skeleton-email",
+    "description": "Email infrastructure for skeleton",
+    "type": "library",
+    "require": {
+		"tigron/skeleton-template": "*"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Tigron BVBA",
+            "email": "support@tigron.be"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/tigron/skeleton-email",
+        "issues": "https://github.com/tigron/skeleton-email/issues"
+    },
+    "autoload": {
+        "psr-4": { "Skeleton\\Email\\": "lib/Skeleton/Email/" }
+    }
+}
