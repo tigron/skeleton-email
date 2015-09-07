@@ -259,7 +259,7 @@ class Email {
 		if ($handle = opendir($path)) {
 			while (false !== ($file = readdir($handle))) {
 				if (substr($file,0,1) != '.' && strpos($html_body, $file) !== false) {
-					$swift_image = Swift_Image::newInstance(file_get_contents($path . $file), $file, Util::mime_type($path . $file));
+					$swift_image = \Swift_Image::newInstance(file_get_contents($path . $file), $file, Util::mime_type($path . $file));
 					$html_body = str_replace($file, $message->embed($swift_image), $html_body);
 				}
 			}
@@ -278,7 +278,7 @@ class Email {
 	 */
 	private function attach_files(&$message) {
 		foreach ($this->files as $file) {
-			$message->attach(Swift_Attachment::fromPath($file->get_path()));
+			$message->attach(\Swift_Attachment::fromPath($file->get_path()));
 		}
 	}
 }
