@@ -98,7 +98,6 @@ class Email {
 		$this->recipients['cc'][] = [
 			'name' => $name,
 			'email' => $email,
-			'language' => $language
 		];
 	}
 
@@ -113,7 +112,6 @@ class Email {
 		$this->recipients['bcc'][] = [
 			'name' => $name,
 			'email' => $email,
-			'language' => $language
 		];
 	}
 
