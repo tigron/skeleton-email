@@ -46,5 +46,14 @@ Create a new mail:
 
     $email = new \Skeleton\Email\Email('email_type1');
     $email->set_sender('sender@example.com', 'Test sender');
-    $email->assign('variable1', 'content1');
+
+    /**
+     * Optional: translate the mail with a defined Translation object
+     */
+    $language = Skeleton\I18n\Language::get_by_id(2);
+    $application = 'email'; // Used to fetch the po file
+    $translation = Skeleton\I18n\Translation::get($language, $application);
+    $mail->set_translation($translation));    
+	
+	$email->assign('variable1', 'content1');
     $email->send();
