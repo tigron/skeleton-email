@@ -169,6 +169,10 @@ class Email {
 			throw new \Exception('Cannot send email, Mail not validated. Errored fields: ' . implode(', ', $errors));
 		}
 
+		if (Config::$archive_mailbox !== null) {
+			$this->add_bcc(Config::$archive_mailbox);
+		}
+
 		$template = new \Skeleton\Template\Template();
 		if ($this->translation !== null) {
 			$template->set_translation($this->translation);

@@ -53,7 +53,12 @@ Create a new mail:
     $language = Skeleton\I18n\Language::get_by_id(2);
     $application = 'email'; // Used to fetch the po file
     $translation = Skeleton\I18n\Translation::get($language, $application);
-    $mail->set_translation($translation));    
-	
+    $mail->set_translation($translation));
+
+    /**
+     * Optional: Archive mailbox. Send a copy of every mail to a given mailbox
+     */
+	\Skeleton\Email\Config::$archive_mailbox = 'my_archive@example.com';
+
 	$email->assign('variable1', 'content1');
     $email->send();

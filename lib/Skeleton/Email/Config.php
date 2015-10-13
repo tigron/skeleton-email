@@ -19,5 +19,13 @@ class Config {
 	 */
 	public static $email_directory = null;
 
+	/**
+	 * Archive mailbox
+	 *
+	 * @access public
+	 * @var string $archive_mailbox
+	 */
+	public static $archive_mailbox = null;
+
 
 }
