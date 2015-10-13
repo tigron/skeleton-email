@@ -280,7 +280,7 @@ class Email {
 	 */
 	private function attach_files(&$message) {
 		foreach ($this->files as $file) {
-			$message->attach(\Swift_Attachment::fromPath($file->get_path()));
+			$message->attach(\Swift_Attachment::fromPath($file->get_path())->setFilename($file->name));
 		}
 	}
 }
