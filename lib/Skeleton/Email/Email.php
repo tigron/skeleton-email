@@ -247,10 +247,10 @@ class Email {
 	/**
 	 * Add embedded HTML images (image dir)
 	 *
-	 * @access private
+	 * @access protected
 	 * @param Swift_Message $message
 	 */
-	private function add_html_images(&$message) {
+	protected function add_html_images(&$message) {
 		$path = Config::$email_directory . '/media/';
 		if (!file_exists($path)) {
 			return;
