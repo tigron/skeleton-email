@@ -202,6 +202,10 @@ class Email {
 
 		foreach ($this->recipients as $type => $recipients) {
 			foreach ($recipients as $recipient) {
+				if (isset(\Skeleton\Email\Config::$redirect_all_mailbox) AND \Skeleton\Email\Config::$redirect_all_mailbox !== null) {
+					$recipient['email'] = \Skeleton\Email\Config::$redirect_all_mailbox;
+				}
+
 				if ($recipient['name'] != '') {
 					$addresses[$recipient['email']] = $recipient['name'];
 				} else {

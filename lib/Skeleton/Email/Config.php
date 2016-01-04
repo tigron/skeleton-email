@@ -27,5 +27,12 @@ class Config {
 	 */
 	public static $archive_mailbox = null;
 
+	/**
+	 * Redirect all emails to this mailbox
+	 *
+	 * @access public
+	 * @var string $redirect_all_mailbox
+	 */
+	public static $redirect_all_mailbox = null;
 
 }
