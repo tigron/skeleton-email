@@ -1,4 +1,4 @@
-# skeleton-core
+# skeleton-email
 
 ## Description
 
