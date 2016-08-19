@@ -188,7 +188,7 @@ class Email {
 		$message = \Swift_Message::newInstance()
 			->setBody($template->render( $this->type . '/html.twig'), 'text/html')
 			->addPart($template->render( $this->type . '/text.twig' ), 'text/plain')
-			->setSubject($template->render( $this->type . '/subject.twig' ))
+			->setSubject(trim($template->render( $this->type . '/subject.twig' )))
 		;
 
 		if (isset($this->sender['name'])) {
