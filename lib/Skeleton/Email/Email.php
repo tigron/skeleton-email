@@ -61,6 +61,14 @@ class Email {
 	private $files = [];
 
 	/**
+	 * Template directories
+	 *
+	 * @access private
+	 * @var array $template_directories
+	 */
+	private $template_directories = [];
+
+	/**
 	 * Constructor
 	 *
 	 * @access public
@@ -160,6 +168,26 @@ class Email {
 	}
 
 	/**
+	 * Add template directory
+	 *
+	 * @access public
+	 * @param string $path
+	 */
+	public function add_template_directory($path) {
+		$this->template_directories[] = $path;
+	}
+
+	/**
+	 * Get template directories
+	 *
+	 * @access public
+	 * @return array $template_directories
+	 */
+	public function get_template_directories() {
+		return $this->template_directories;
+	}
+
+	/**
 	 * Send email
 	 *
 	 * @access public
@@ -177,7 +205,14 @@ class Email {
 		if ($this->translation !== null) {
 			$template->set_translation($this->translation);
 		}
-		$template->set_template_directory(Config::$email_directory . '/template/');
+
+		if (count($this->template_directories) == 0) {
+			$this->add_template_directory(Config::$email_directory . '/template/');
+		}
+
+		foreach ($this->template_directories as $template_directory) {
+			$template->add_template_directory($template_directory);
+		}
 
 		foreach ($this->assigns as $key => $value) {
 			$template->assign($key, $value);
