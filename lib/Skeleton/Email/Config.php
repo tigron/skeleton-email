@@ -35,4 +35,12 @@ class Config {
 	 */
 	public static $redirect_all_mailbox = null;
 
+	/**
+	 * Name of the header in which we will print the e-mail type
+	 * Defaults to null, which will disable the header inlcusion.
+	 *
+	 * @access public
+	 * @var string $email_type_header
+	 */
+	public static $email_type_header = null;
 }

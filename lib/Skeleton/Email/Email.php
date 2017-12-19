@@ -226,6 +226,11 @@ class Email {
 			->setSubject(trim($template->render( $this->type . '/subject.twig' )))
 		;
 
+		if (isset(\Skeleton\Email\Config::$email_type_header) AND \Skeleton\Email\Config::$email_type_header !== null) {
+			$headers = $message->getHeaders();
+			$headers->addTextHeader(\Skeleton\Email\Config::$email_type_header, $this->type);
+		}
+
 		if (isset($this->sender['name'])) {
 			$message->setFrom([$this->sender['email'] => $this->sender['name']]);
 		} else {
