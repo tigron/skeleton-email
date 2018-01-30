@@ -89,9 +89,13 @@ class Email {
 	 * @param string $name
 	 */
 	public function add_to($email, $name = null) {
+		if ($this->addressee_exists($email)) {
+			return;
+		}
+
 		$this->recipients['to'][] = [
 			'name' => $name,
-			'email' => $email,
+			'email' => strtolower($email),
 		];
 	}
 
@@ -103,9 +107,13 @@ class Email {
 	 * @param string $name
 	 */
 	public function add_cc($email, $name = null) {
+		if ($this->addressee_exists($email)) {
+			return;
+		}
+
 		$this->recipients['cc'][] = [
 			'name' => $name,
-			'email' => $email,
+			'email' => strtolower($email),
 		];
 	}
 
@@ -117,9 +125,13 @@ class Email {
 	 * @param string $name
 	 */
 	public function add_bcc($email, $name = null) {
+		if ($this->addressee_exists($email)) {
+			return;
+		}
+
 		$this->recipients['bcc'][] = [
 			'name' => $name,
-			'email' => $email,
+			'email' => strtolower($email),
 		];
 	}
 
@@ -326,5 +338,26 @@ class Email {
 		foreach ($this->files as $file) {
 			$message->attach(\Swift_Attachment::fromPath($file->get_path())->setFilename($file->name));
 		}
+	}
+
+	/**
+	 * Check whether an address exists in the address lists
+	 *
+	 * @param string $addressee
+	 * @param array $lists Array of lists to check (to, cc, bcc)
+	 * @return bool
+	 */
+	private function addressee_exists(string $addressee, array $lists = []): bool {
+		foreach ($this->recipients as $recipient_list => $recipients) {
+			if (in_array($recipient_list, $lists) or count($lists) === 0) {
+				foreach ($recipients as $recipient) {
+					if ($recipient['email'] == $addressee) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 }
