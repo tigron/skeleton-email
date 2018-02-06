@@ -271,9 +271,19 @@ class Email {
 		}
 
 		foreach ($this->recipients as $type => $recipients) {
+			$addresses = [];
+
 			foreach ($recipients as $recipient) {
 				if (isset(\Skeleton\Email\Config::$redirect_all_mailbox) AND \Skeleton\Email\Config::$redirect_all_mailbox !== null) {
 					$recipient['email'] = \Skeleton\Email\Config::$redirect_all_mailbox;
+				}
+
+				if (!\Swift_Validate::email($recipient['email'])) {
+					if (Config::$strict_address_validation !== false) {
+						throw new Exception\Validation('Invalid e-mail address: ' . $recipient['email']);
+					} else {
+						continue;
+					}
 				}
 
 				if ($recipient['name'] != '') {
@@ -284,7 +294,25 @@ class Email {
 			}
 
 			$set_to = 'set' . ucfirst($type);
-			call_user_func([$message, $set_to], $addresses);
+
+			try {
+				call_user_func([$message, $set_to], $addresses);
+			} catch (\Swift_RfcComplianceException $e) {
+				if (Config::$strict_address_validation !== false) {
+					throw new Exception\Validation($e->getMessage());
+				}
+			}
+		}
+
+		// If we have no recipients in the message, and strict validation is
+		// disabled, and we do have recipients locally, fail silently. This means
+		// all recipients set by the user were invalid.
+		if (
+			(count($message->getTo()) < 1 and count($message->getCc()) < 1 and count($message->getBcc()) < 1) and
+			(isset($this->recipients) and count($this->recipients) > 0) and
+			Config::$strict_address_validation === false
+		) {
+			return;
 		}
 
 		$mailer->send($message);
