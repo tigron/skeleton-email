@@ -89,7 +89,7 @@ class Email {
 	 * @param string $name
 	 */
 	public function add_to($email, $name = null) {
-		if ($this->addressee_exists($email)) {
+		if ($this->addressee_exists($email, ['to'])) {
 			return;
 		}
 
@@ -107,7 +107,7 @@ class Email {
 	 * @param string $name
 	 */
 	public function add_cc($email, $name = null) {
-		if ($this->addressee_exists($email)) {
+		if ($this->addressee_exists($email, ['cc'])) {
 			return;
 		}
 
@@ -125,7 +125,7 @@ class Email {
 	 * @param string $name
 	 */
 	public function add_bcc($email, $name = null) {
-		if ($this->addressee_exists($email)) {
+		if ($this->addressee_exists($email, ['bcc'])) {
 			return;
 		}
 
@@ -251,6 +251,24 @@ class Email {
 
 		$this->add_html_images($message);
 		$this->attach_files($message);
+
+		// Remove duplicate recipients, in order of importance
+		$types = ['bcc', 'cc', 'to'];
+		foreach ($types as $type) {
+			array_shift($types);
+
+			if (count($types) === 0) {
+				continue;
+			}
+
+			if (isset($this->recipients[$type])) {
+				foreach ($this->recipients[$type] as $key => $recipient) {
+					if ($this->addressee_exists($recipient['email'], $types)) {
+						unset($this->recipients[$type][$key]);
+					}
+				}
+			}
+		}
 
 		foreach ($this->recipients as $type => $recipients) {
 			foreach ($recipients as $recipient) {
