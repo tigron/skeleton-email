@@ -8,6 +8,7 @@ This library contains the email functionality of Skeleton
 Installation via composer:
 
     composer require tigron/skeleton-email
+    composer require tigron/skeleton-template-twig
 
 ## Howto
 
