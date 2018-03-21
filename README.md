@@ -57,6 +57,12 @@ Create a new mail:
     $email->set_translation($translation));
 
     /**
+     * Optional: attach file(s)
+     */
+    $email->add_attachment(\Skeleton\File\File::get_by_id(1234));
+    $email->add_attachment_file('/some_very_cool_path/filename.ext');
+
+    /**
      * Optional: Archive mailbox. Send a copy of every mail to a given mailbox
      */
     \Skeleton\Email\Config::$archive_mailbox = 'my_archive@example.com';
