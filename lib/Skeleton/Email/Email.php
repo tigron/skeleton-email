@@ -7,6 +7,7 @@
  * @author Christophe Gosiau <christophe@tigron.be>
  * @author Gerry Demaret <gerry@tigron.be>
  * @author David Vandemaele <david@tigron.be>
+ * @author Lionel Laffineur <lionel@tigron.be>
  */
 
 namespace Skeleton\Email;
@@ -143,6 +144,16 @@ class Email {
 	 */
 	public function set_translation(\Skeleton\I18n\Translation $translation) {
 		$this->translation = $translation;
+	}
+
+	/**
+	 * Add a file to attach giving a filefullname
+	 *
+	 * @access public
+	 * @param $filefullname
+	 */
+	public function add_attachment_file($filefullname) {
+		$this->files[] = $filefullname;
 	}
 
 	/**
@@ -382,7 +393,11 @@ class Email {
 	 */
 	private function attach_files(&$message) {
 		foreach ($this->files as $file) {
-			$message->attach(\Swift_Attachment::fromPath($file->get_path())->setFilename($file->name));
+			if (gettype($file) == 'string') {
+				$message->attach(\Swift_Attachment::fromPath($file)->setFilename(basename($file)));
+			} else {
+				$message->attach(\Swift_Attachment::fromPath($file->get_path())->setFilename($file->name));
+			}
 		}
 	}
 
