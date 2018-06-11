@@ -195,9 +195,20 @@ class Email {
 	 *
 	 * @access public
 	 * @param string $path
+	 * @param string $namespace (optional)
+	 * @param bool $prepend (optional)
 	 */
-	public function add_template_directory($path) {
-		$this->template_directories[] = $path;
+	public function add_template_directory($path, $namespace = null, $prepend = false) {
+		$template_directory = [
+			'directory' => $path,
+			'namespace' => $namespace
+		];
+
+		if ($prepend) {
+			array_unshift($this->template_directories, $template_directory);
+		} else {
+			array_push($this->template_directories, $template_directory);
+		}
 	}
 
 	/**
@@ -234,7 +245,7 @@ class Email {
 		}
 
 		foreach ($this->template_directories as $template_directory) {
-			$template->add_template_directory($template_directory);
+			$template->add_template_directory($template_directory['directory'], $template_directory['namespace']);
 		}
 
 		foreach ($this->assigns as $key => $value) {
