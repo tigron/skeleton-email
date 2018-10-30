@@ -38,6 +38,14 @@ class Email {
 	private $recipients = [];
 
 	/**
+	 * Reply to
+	 *
+	 * @access private
+	 * @var array $reply_to
+	 */
+	private $reply_to = [];
+
+	/**
 	 * Assigned variables
 	 *
 	 * @access private
@@ -131,6 +139,26 @@ class Email {
 		}
 
 		$this->recipients['bcc'][] = [
+			'name' => $name,
+			'email' => strtolower($email),
+		];
+	}
+
+	/**
+	 * Add reply to
+	 *
+	 * @access private
+	 * @param string $email
+	 * @param string $name
+	 */
+	public function add_reply_to($email, $name = null) {
+		foreach ($this->reply_to as $reply_to) {
+			if ($reply_to['email'] == $email) {
+				return;
+			}
+		}
+
+		$this->reply_to[] = [
 			'name' => $name,
 			'email' => strtolower($email),
 		];
@@ -260,15 +288,26 @@ class Email {
 			->setSubject(trim($template->render( $this->type . '/subject.twig' )))
 		;
 
+		// Add header
 		if (isset(\Skeleton\Email\Config::$email_type_header) AND \Skeleton\Email\Config::$email_type_header !== null) {
 			$headers = $message->getHeaders();
 			$headers->addTextHeader(\Skeleton\Email\Config::$email_type_header, $this->type);
 		}
 
+		// Set sender
 		if (isset($this->sender['name'])) {
 			$message->setFrom([$this->sender['email'] => $this->sender['name']]);
 		} else {
 			$message->setFrom($this->sender['email']);
+		}
+
+		// Set reply to
+		foreach ($this->reply_to as $reply_to) {
+			if (isset($reply_to['name'])) {
+				$message->setReplyTo([ $reply_to['email'] => $reply_to['name'] ]);
+			} else {
+				$message->setReplyTo($reply_to['email']);
+			}
 		}
 
 		$this->add_html_images($message);
@@ -292,6 +331,7 @@ class Email {
 			}
 		}
 
+		// Add recipients
 		foreach ($this->recipients as $type => $recipients) {
 			$addresses = [];
 
