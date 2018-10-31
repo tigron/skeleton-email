@@ -47,6 +47,7 @@ Create a new mail:
 
     $email = new \Skeleton\Email\Email('email_type1');
     $email->set_sender('sender@example.com', 'Test sender');
+    $email->add_to('to@example.com' [, 'to name' ]);
 
     /**
      * Optional: translate the mail with a defined Translation object
@@ -57,6 +58,17 @@ Create a new mail:
     $email->set_translation($translation));
 
     /**
+     * Optional: add different recipient types
+     */
+    $email->add_cc('cc@example.com' [, 'cc name' ]);
+    $email->add_bcc('bcc@example.com' [, 'bcc name' ]);
+    
+    /**
+     * Optional: add reply-to recipient
+     */
+    $email->add_reply_to('reply-to@example.com' [, 'reply-to name' ]);
+    
+    /**
      * Optional: attach file(s)
      */
     $email->add_attachment(\Skeleton\File\File::get_by_id(1234));
@@ -66,6 +78,13 @@ Create a new mail:
      * Optional: Archive mailbox. Send a copy of every mail to a given mailbox
      */
     \Skeleton\Email\Config::$archive_mailbox = 'my_archive@example.com';
-    $email->add_to('test@example.com');
+   
+    /**
+     * Optional: Assign variables
+     */
     $email->assign('variable1', 'content1');
+    
+    /**
+     * Send email
+     */
     $email->send();
