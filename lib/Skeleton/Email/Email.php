@@ -336,7 +336,7 @@ class Email {
 			$addresses = [];
 
 			foreach ($recipients as $recipient) {
-				if (isset(\Skeleton\Email\Config::$redirect_all_mailbox) AND \Skeleton\Email\Config::$redirect_all_mailbox !== null) {
+				if (!empty(\Skeleton\Email\Config::$redirect_all_mailbox)) {
 					$recipient['email'] = \Skeleton\Email\Config::$redirect_all_mailbox;
 				}
 
