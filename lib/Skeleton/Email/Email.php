@@ -255,6 +255,7 @@ class Email {
 	 * @access public
 	 */
 	public function send() {
+		$errors = [];
 		if (!$this->validate($errors)) {
 			throw new \Exception('Cannot send email, Mail not validated. Errored fields: ' . implode(', ', $errors));
 		}
@@ -280,13 +281,31 @@ class Email {
 			$template->assign($key, $value);
 		}
 
-		$transport = \Swift_MailTransport::newInstance();
-		$mailer = \Swift_Mailer::newInstance($transport);
-		$message = \Swift_Message::newInstance()
-			->setBody($template->render( $this->type . '/html.twig'), 'text/html')
-			->addPart($template->render( $this->type . '/text.twig' ), 'text/plain')
-			->setSubject(trim($template->render( $this->type . '/subject.twig' )))
-		;
+		$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t');
+		$mailer = new \Swift_Mailer($transport);
+		$message = new \Swift_Message();
+
+		$body_set = false;
+
+		try {
+			$message->setBody($template->render( $this->type . '/html.twig'), 'text/html');
+			$body_set = true;
+		} catch (\Skeleton\Template\Exception\Loader $e) {}
+
+		try {
+			if ($body_set) {
+				$message->addPart($template->render( $this->type . '/text.twig' ), 'text/plain');
+			} else {
+				$message->setBody($template->render( $this->type . '/text.twig' ), 'text/plain');
+				$body_set = true;
+			}
+		} catch (\Skeleton\Template\Exception\Loader $e) {}
+
+		if (!$body_set) {
+			throw new Exception\Template('No template to load as body');
+		}
+
+		$message->setSubject(trim($template->render( $this->type . '/subject.twig' )));
 
 		// Add header
 		if (isset(\Skeleton\Email\Config::$email_type_header) AND \Skeleton\Email\Config::$email_type_header !== null) {
@@ -340,7 +359,12 @@ class Email {
 					$recipient['email'] = \Skeleton\Email\Config::$redirect_all_mailbox;
 				}
 
-				if (!\Swift_Validate::email($recipient['email'])) {
+				$validator = new \Egulias\EmailValidator\EmailValidator();
+				$multipleValidations = new \Egulias\EmailValidator\Validation\MultipleValidationWithAnd([
+					new \Egulias\EmailValidator\Validation\RFCValidation(),
+				]);
+
+				if (!$validator->isValid($recipient['email'], $multipleValidations)) {
 					if (Config::$strict_address_validation !== false) {
 						throw new Exception\Validation('Invalid e-mail address: ' . $recipient['email']);
 					} else {
@@ -425,7 +449,7 @@ class Email {
 		if ($handle = opendir($path)) {
 			while (false !== ($file = readdir($handle))) {
 				if (substr($file,0,1) != '.' && strpos($html_body, $file) !== false) {
-					$swift_image = \Swift_Image::newInstance(file_get_contents($path . $file), $file, Util::mime_type($path . $file));
+					$swift_image = new \Swift_Image(file_get_contents($path . $file), $file, Util::mime_type($path . $file));
 					$html_body = str_replace($file, $message->embed($swift_image), $html_body);
 				}
 			}
