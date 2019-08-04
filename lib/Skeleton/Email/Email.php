@@ -281,27 +281,25 @@ class Email {
 			$template->assign($key, $value);
 		}
 
+		// The default sendmail mode is -bs, which is not supported by some
+		// sendmail "compatible" tools.
 		$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t');
 		$mailer = new \Swift_Mailer($transport);
 		$message = new \Swift_Message();
 
-		$body_set = false;
-
 		try {
 			$message->setBody($template->render( $this->type . '/html.twig'), 'text/html');
-			$body_set = true;
 		} catch (\Skeleton\Template\Exception\Loader $e) {}
 
 		try {
-			if ($body_set) {
+			if ($message->getBody() === null) {
 				$message->addPart($template->render( $this->type . '/text.twig' ), 'text/plain');
 			} else {
 				$message->setBody($template->render( $this->type . '/text.twig' ), 'text/plain');
-				$body_set = true;
 			}
 		} catch (\Skeleton\Template\Exception\Loader $e) {}
 
-		if (!$body_set) {
+		if ($message->getBody() === null) {
 			throw new Exception\Template('No template to load as body');
 		}
 
