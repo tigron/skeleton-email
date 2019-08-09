@@ -283,7 +283,7 @@ class Email {
 
 		// The default sendmail mode is -bs, which is not supported by some
 		// sendmail "compatible" tools.
-		$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t');
+		$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t -i');
 		$mailer = new \Swift_Mailer($transport);
 		$message = new \Swift_Message();
 
