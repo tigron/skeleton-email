@@ -293,9 +293,9 @@ class Email {
 
 		try {
 			if ($message->getBody() === null) {
-				$message->addPart($template->render( $this->type . '/text.twig' ), 'text/plain');
-			} else {
 				$message->setBody($template->render( $this->type . '/text.twig' ), 'text/plain');
+			} else {
+				$message->addPart($template->render( $this->type . '/text.twig' ), 'text/plain');
 			}
 		} catch (\Skeleton\Template\Exception\Loader $e) {}
 
