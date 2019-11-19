@@ -55,7 +55,7 @@ Create a new mail:
     $language = Skeleton\I18n\Language::get_by_id(2);
     $application = 'email'; // Used to fetch the po file
     $translation = Skeleton\I18n\Translation::get($language, $application);
-    $email->set_translation($translation));
+    $email->set_translation($translation);
 
     /**
      * Optional: add different recipient types
