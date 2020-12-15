@@ -53,4 +53,24 @@ class Config {
 	 * @var string $strict_address_validation
 	 */
 	public static $strict_address_validation = true;
+
+	/**
+	 * The transport type service to use (sendmail or smtp)
+	 * Defaults to sendmail
+	 *
+	 * @access public
+	 * @var string $transport_type
+	 */
+	public static $transport_type = 'sendmail';
+
+	/**
+	 * Config needed to connect to a smtp server
+	 * Required options: host, port
+	 * Optional options: encryption (tls or ssl), username, password
+	 *
+	 * @access public
+	 * @var array $transport_type_smtp_config
+	 */
+	public static $transport_smtp_config = [ 'host' => null, 'port' => 25 ];
+
 }

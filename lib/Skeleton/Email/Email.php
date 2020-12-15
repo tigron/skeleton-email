@@ -281,9 +281,31 @@ class Email {
 			$template->assign($key, $value);
 		}
 
-		// The default sendmail mode is -bs, which is not supported by some
-		// sendmail "compatible" tools.
-		$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t -i');
+		if (Config::$transport_type == 'smtp') {
+			$settings = Config::$transport_smtp_config;
+			if (
+				isset($settings['host']) === false
+				|| isset($settings['port']) === false
+			) {
+				throw new \Exception('Not all smtp settings are provided');
+			}
+
+			$encryption = null;
+			if (isset($settings['encryption']) && in_array($settings['encryption'], ['ssl', 'tls'])) {
+				$encryption = $settings['encryption'];
+			}
+
+			$transport = new \Swift_SmtpTransport($settings['host'], $settings['port'], $encryption);
+
+			if (isset($settings['username']) && $settings['password']) {
+				$transport->setUsername($settings['username']);
+				$transport->setPassword($settings['password']);
+			}
+		} else {
+			// The default sendmail mode is -bs, which is not supported by some
+			// sendmail "compatible" tools.
+			$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t -i');
+		}
 		$mailer = new \Swift_Mailer($transport);
 		$message = new \Swift_Message();
 
