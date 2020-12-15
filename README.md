@@ -81,13 +81,11 @@ Create a new mail:
 
     /**
      * Optional: Transport type. Send email using smtp or sendmail (default: sendmail)
+     * When smtp is used at least a host and port are required.
+     * Optionally you can also define which encryption is needed (ssl or tls)
+     * and if authentication is required (username, password).
      */
-    \Skeleton\Email\Config::$transport_type = 'sendmail';
-
-    When smtp is used at least a host and port are required.
-    Optionally you can also define which encryption is needed (ssl or tls)
-    and if authentication is required (username, password).
-
+    \Skeleton\Email\Config::$transport_type = 'smtp';
     \Skeleton\Email\Config::$transport_smtp_config = [
         'host' => 'smtp.example.com',
         'port' => 25,
