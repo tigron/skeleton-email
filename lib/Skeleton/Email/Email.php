@@ -295,7 +295,16 @@ class Email {
 				$encryption = $settings['encryption'];
 			}
 
-			$transport = new \Swift_SmtpTransport($settings['host'], $settings['port'], $encryption);
+			$socket_stream = new \Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream();
+			$host = 'localhost';
+			if (isset($settings['host'])) {
+				$host = $settings['host'];
+			}
+			$port = 25;
+			if (isset($settings['port'])) {
+				$port = $settings['port'];
+			}
+			$transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport($host, $port);
 
 			if (isset($settings['username']) && $settings['password']) {
 				$transport->setUsername($settings['username']);
@@ -304,28 +313,17 @@ class Email {
 		} else {
 			// The default sendmail mode is -bs, which is not supported by some
 			// sendmail "compatible" tools.
-			$transport = new \Swift_SendmailTransport('/usr/sbin/sendmail -t -i');
+			$transport = new \Symfony\Component\Mailer\Transport\SendmailTransport(Config::$transport_sendmail_command);
 		}
-		$mailer = new \Swift_Mailer($transport);
-		$message = new \Swift_Message();
+		$mailer = new \Symfony\Component\Mailer\Mailer($transport);
+		$message = new \Symfony\Component\Mime\Email();
 
 		try {
-			$message->setBody($template->render( $this->type . '/html.twig'), 'text/html');
+			$message->html($template->render( $this->type . '/html.twig'));
+			$message->text($template->render( $this->type . '/text.twig'));
 		} catch (\Skeleton\Template\Exception\Loader $e) {}
 
-		try {
-			if ($message->getBody() === null) {
-				$message->setBody($template->render( $this->type . '/text.twig' ), 'text/plain');
-			} else {
-				$message->addPart($template->render( $this->type . '/text.twig' ), 'text/plain');
-			}
-		} catch (\Skeleton\Template\Exception\Loader $e) {}
-
-		if ($message->getBody() === null) {
-			throw new Exception\Template('No template to load as body');
-		}
-
-		$message->setSubject(trim($template->render( $this->type . '/subject.twig' )));
+		$message->subject(trim($template->render( $this->type . '/subject.twig' )));
 
 		// Add header
 		if (isset(\Skeleton\Email\Config::$email_type_header) AND \Skeleton\Email\Config::$email_type_header !== null) {
@@ -335,22 +333,19 @@ class Email {
 
 		// Set sender
 		if (isset($this->sender['name'])) {
-			$message->setFrom([$this->sender['email'] => $this->sender['name']]);
+			$message->addFrom(new \Symfony\Component\Mime\Address($this->sender['email'], $this->sender['name']));
 		} else {
-			$message->setFrom($this->sender['email']);
+			$message->addFrom($this->sender['email']);
 		}
 
 		// Set reply to
 		foreach ($this->reply_to as $reply_to) {
 			if (isset($reply_to['name'])) {
-				$message->setReplyTo([ $reply_to['email'] => $reply_to['name'] ]);
+				$message->addReplyTo(new \Symfony\Component\Mime\Address($reply_to['email'], $reply_to['name']));
 			} else {
-				$message->setReplyTo($reply_to['email']);
+				$message->addReplyTo($reply_to['email']);
 			}
 		}
-
-		$this->add_html_images($message);
-		$this->attach_files($message);
 
 		// Remove duplicate recipients, in order of importance
 		$types = ['bcc', 'cc', 'to'];
@@ -393,22 +388,27 @@ class Email {
 				}
 
 				if ($recipient['name'] != '') {
-					$addresses[$recipient['email']] = $recipient['name'];
+					$addresses[] = new \Symfony\Component\Mime\Address($recipient['email'], $recipient['name']);
 				} else {
 					$addresses[] = $recipient['email'];
 				}
 			}
 
-			$set_to = 'set' . ucfirst($type);
+			$set_to = 'add' . ucfirst($type);
 
-			try {
-				call_user_func([$message, $set_to], $addresses);
-			} catch (\Swift_RfcComplianceException $e) {
-				if (Config::$strict_address_validation !== false) {
-					throw new Exception\Validation($e->getMessage());
+			foreach ($addresses as $address) {
+				try {
+					call_user_func([$message, $set_to], $address);
+				} catch (\Swift_RfcComplianceException $e) {
+					if (Config::$strict_address_validation !== false) {
+						throw new Exception\Validation($e->getMessage());
+					}
 				}
 			}
 		}
+
+		$this->add_html_images($message);
+		$this->attach_files($message);
 
 		// If we have no recipients in the message, and strict validation is
 		// disabled, and we do have recipients locally, fail silently. This means
@@ -464,18 +464,18 @@ class Email {
 			return;
 		}
 
-		$html_body = $message->getBody();
+		$html_body = $message->getHtmlBody();
 
 		if ($handle = opendir($path)) {
 			while (false !== ($file = readdir($handle))) {
 				if (substr($file,0,1) != '.' && strpos($html_body, $file) !== false) {
-					$swift_image = new \Swift_Image(file_get_contents($path . $file), $file, Util::mime_type($path . $file));
-					$html_body = str_replace($file, $message->embed($swift_image), $html_body);
+					$message->embedFromPath($path . $file, $file);
+					$html_body = str_replace($file, "cid:" . $file, $html_body);
 				}
 			}
 		}
 
-		$message->setBody($html_body);
+		$message->html($html_body);
 
 		closedir($handle);
 	}
@@ -489,9 +489,9 @@ class Email {
 	private function attach_files(&$message) {
 		foreach ($this->files as $file) {
 			if (gettype($file) == 'string') {
-				$message->attach(\Swift_Attachment::fromPath($file)->setFilename(basename($file)));
+				$message->attachFromPath($file);
 			} else {
-				$message->attach(\Swift_Attachment::fromPath($file->get_path())->setFilename($file->name));
+				$message->attachFromPath($file->get_path());
 			}
 		}
 	}

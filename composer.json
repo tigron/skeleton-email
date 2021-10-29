@@ -5,7 +5,7 @@
     "require": {
         "php": ">=7.0.0",
         "tigron/skeleton-template": "*",
-        "swiftmailer/swiftmailer": "v6.*"
+        "symfony/mailer": "5.3"
     },
     "license": "MIT",
     "authors": [

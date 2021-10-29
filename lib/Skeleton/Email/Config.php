@@ -73,4 +73,11 @@ class Config {
 	 */
 	public static $transport_smtp_config = [ 'host' => null, 'port' => 25 ];
 
+	/**
+	 * A default sendmail command to adjust to your setup if needed
+	 *
+	 * @access public
+	 * @var string $transport_sendmail_command
+	 */
+	public static $transport_sendmail_command = '/usr/sbin/sendmail -t -i';
 }
