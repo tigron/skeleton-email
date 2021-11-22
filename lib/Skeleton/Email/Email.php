@@ -30,6 +30,14 @@ class Email {
 	private $sender = null;
 
 	/**
+	 * Sender
+	 *
+	 * @access private
+	 * @var array $sender
+	 */
+	private $envelope_from = null;
+
+	/**
 	 * Recipients
 	 *
 	 * @access private
@@ -208,6 +216,19 @@ class Email {
 	}
 
 	/**
+	 * set_envelope_from
+	 *
+	 * @param string $email
+	 * @param string $address
+	 */
+	public function set_envelope_from($email) {
+		$this->envelope_from = [
+			'email' => $email
+		];
+	}
+
+
+	/**
 	 * Assign
 	 *
 	 * @access public
@@ -338,6 +359,15 @@ class Email {
 			$message->addFrom($this->sender['email']);
 		}
 
+		if (isset($this->envelope_from['email'])) {
+			$envelope =  new \Symfony\Component\Mailer\Envelope(
+				new \Symfony\Component\Mime\Address($this->envelope_from['email']),
+				[
+					new \Symfony\Component\Mime\Address($this->envelope_from['email']),
+				]
+			);
+		}
+
 		// Set reply to
 		foreach ($this->reply_to as $reply_to) {
 			if (isset($reply_to['name'])) {
@@ -417,11 +447,16 @@ class Email {
 			(count($message->getTo()) < 1 and count($message->getCc()) < 1 and count($message->getBcc()) < 1) and
 			(isset($this->recipients) and count($this->recipients) > 0) and
 			Config::$strict_address_validation === false
-		) {
-			return;
+			) {
+				return;
+			}
+
+		if (isset($envelope)) {
+			$mailer->send($message, $envelope);
+		} else {
+			$mailer->send($message);
 		}
 
-		$mailer->send($message);
 		unset($template);
 	}
 
@@ -491,7 +526,7 @@ class Email {
 			if (gettype($file) == 'string') {
 				$message->attachFromPath($file);
 			} else {
-				$message->attachFromPath($file->get_path());
+				$message->attachFromPath($file->get_path(), $file->name);
 			}
 		}
 	}
