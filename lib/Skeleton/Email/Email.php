@@ -30,10 +30,10 @@ class Email {
 	private $sender = null;
 
 	/**
-	 * Sender
+	 * Envelope from
 	 *
 	 * @access private
-	 * @var array $sender
+	 * @var array $envelope_from
 	 */
 	private $envelope_from = null;
 
