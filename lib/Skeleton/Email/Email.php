@@ -101,6 +101,9 @@ class Email {
 		if ($this->addressee_exists($email, ['to'])) {
 			return;
 		}
+		if ($name != null) {
+			$name = trim($name);
+		}
 
 		$this->recipients['to'][] = [
 			'name' => $name,
@@ -119,6 +122,9 @@ class Email {
 		if ($this->addressee_exists($email, ['cc'])) {
 			return;
 		}
+		if ($name != null) {
+			$name = trim($name);
+		}
 
 		$this->recipients['cc'][] = [
 			'name' => $name,
@@ -136,6 +142,9 @@ class Email {
 	public function add_bcc($email, $name = null) {
 		if ($this->addressee_exists($email, ['bcc'])) {
 			return;
+		}
+		if ($name != null) {
+			$name = trim($name);
 		}
 
 		$this->recipients['bcc'][] = [
