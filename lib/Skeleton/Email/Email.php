@@ -30,10 +30,10 @@ class Email {
 	private $sender = null;
 
 	/**
-	 * Sender
+	 * Envelope from
 	 *
 	 * @access private
-	 * @var array $sender
+	 * @var array $envelope_from
 	 */
 	private $envelope_from = null;
 
@@ -332,9 +332,9 @@ class Email {
 				$transport->setPassword($settings['password']);
 			}
 		} else {
-			// The default sendmail mode is -bs, which is not supported by some
-			// sendmail "compatible" tools.
-			$transport = new \Symfony\Component\Mailer\Transport\SendmailTransport(Config::$transport_sendmail_command);
+			// We use a local fork of the Sendmail transport
+			// See Transport\Sendmail for details
+			$transport = new Transport\Sendmail(Config::$transport_sendmail_command);
 		}
 		$mailer = new \Symfony\Component\Mailer\Mailer($transport);
 		$message = new \Symfony\Component\Mime\Email();
