@@ -110,6 +110,10 @@ class Email {
 			return;
 		}
 
+		if ($name !== null) {
+			$name = trim($name);
+		}
+
 		$this->recipients['to'][] = [
 			'name' => $name,
 			'email' => strtolower($email),
@@ -126,6 +130,10 @@ class Email {
 	public function add_cc($email, $name = null) {
 		if ($this->addressee_exists($email, ['cc'])) {
 			return;
+		}
+
+		if ($name !== null) {
+			$name = trim($name);
 		}
 
 		$this->recipients['cc'][] = [
@@ -146,6 +154,10 @@ class Email {
 			return;
 		}
 
+		if ($name !== null) {
+			$name = trim($name);
+		}
+
 		$this->recipients['bcc'][] = [
 			'name' => $name,
 			'email' => strtolower($email),
@@ -164,6 +176,10 @@ class Email {
 			if ($reply_to['email'] == $email) {
 				return;
 			}
+		}
+
+		if ($name !== null) {
+			$name = trim($name);
 		}
 
 		$this->reply_to[] = [
