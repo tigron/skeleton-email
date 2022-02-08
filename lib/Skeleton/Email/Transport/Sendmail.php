@@ -27,6 +27,7 @@ use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mailer\Transport\Smtp\SmtpTransport;
 use Symfony\Component\Mailer\Transport\Smtp\Stream\AbstractStream;
 use Symfony\Component\Mailer\Transport\Smtp\Stream\ProcessStream;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Mime\RawMessage;
 
 /**
