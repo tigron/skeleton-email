@@ -445,7 +445,7 @@ class Email {
 			foreach ($addresses as $address) {
 				try {
 					call_user_func([$message, $set_to], $address);
-				} catch (\Swift_RfcComplianceException $e) {
+				} catch (\Symfony\Component\Mime\Exception\RfcComplianceException $e) {
 					if (Config::$strict_address_validation !== false) {
 						throw new Exception\Validation($e->getMessage());
 					}
@@ -507,7 +507,7 @@ class Email {
 	 * Add embedded HTML images (image dir)
 	 *
 	 * @access protected
-	 * @param Swift_Message $message
+	 * @param \Symfony\Component\Mime\Email $message
 	 */
 	protected function add_html_images(&$message) {
 		$path = Config::$email_directory . '/media/';
@@ -535,7 +535,7 @@ class Email {
 	 * Attach files
 	 *
 	 * @access private
-	 * @param Swift_Message $message
+	 * @param \Symfony\Component\Mime\Email $message
 	 */
 	private function attach_files(&$message) {
 		foreach ($this->files as $file) {
