@@ -81,9 +81,9 @@ class Email {
 	 * Template directories
 	 *
 	 * @access private
-	 * @var array $template_directories
+	 * @var array $template_paths
 	 */
-	private $template_directories = [];
+	private $template_paths = [];
 
 	/**
 	 * Constructor
@@ -256,34 +256,60 @@ class Email {
 	}
 
 	/**
-	 * Add template directory
+	 * Add template path
 	 *
 	 * @access public
 	 * @param string $path
 	 * @param string $namespace (optional)
 	 * @param bool $prepend (optional)
 	 */
-	public function add_template_directory($path, $namespace = null, $prepend = false) {
-		$template_directory = [
+	public function add_template_path($path, $namespace = null, $prepend = false) {
+		$template_path = [
 			'directory' => $path,
 			'namespace' => $namespace
 		];
 
 		if ($prepend) {
-			array_unshift($this->template_directories, $template_directory);
+			array_unshift($this->template_paths, $template_path);
 		} else {
-			array_push($this->template_directories, $template_directory);
+			array_push($this->template_paths, $template_path);
 		}
+	}
+
+	/**
+	 * Add template directory
+	 *
+	 * @Deprecated: for backwards compatibility
+	 *
+	 * @access public
+	 * @param string $path
+	 * @param string $namespace (optional)
+	 * @param bool $prepend (optional)
+	 */
+	public function add_template_directory($directory, $namespace = null, $prepend = false) {
+		$this->add_template_path($directory);
+	}
+
+	/**
+	 * Get template directories
+	 *
+	 * @Deprecated: for backwards compatibility
+	 *
+	 * @access public
+	 * @return array $template_directories
+	 */
+	public function get_template_directories() {
+		return $this->get_template_paths();
 	}
 
 	/**
 	 * Get template directories
 	 *
 	 * @access public
-	 * @return array $template_directories
+	 * @return array $template_paths
 	 */
-	public function get_template_directories() {
-		return $this->template_directories;
+	public function get_template_paths() {
+		return $this->template_paths;
 	}
 
 	/**
@@ -306,12 +332,12 @@ class Email {
 			$template->set_translation($this->translation);
 		}
 
-		if (count($this->template_directories) == 0) {
-			$this->add_template_directory(Config::$email_directory . '/template/');
+		if (count($this->template_paths) == 0) {
+			$this->add_template_path(Config::$email_email . '/template/');
 		}
 
-		foreach ($this->template_directories as $template_directory) {
-			$template->add_template_directory($template_directory['directory'], $template_directory['namespace']);
+		foreach ($this->template_paths as $template_paths) {
+			$template->add_template_path($template_paths['directory'], $template_paths['namespace']);
 		}
 
 		foreach ($this->assigns as $key => $value) {
@@ -510,7 +536,13 @@ class Email {
 	 * @param \Symfony\Component\Mime\Email $message
 	 */
 	protected function add_html_images(&$message) {
-		$path = Config::$email_directory . '/media/';
+		/**
+		 * @Deprecated: for backwards compatibility
+		 */
+		if (!isset(Config::$email_path) and isset(Config::$email_directory)) {
+			Config::$email_path = Config::$email_directory;
+		}
+		$path = Config::$email_path . '/media/';
 		if (!file_exists($path)) {
 			return;
 		}

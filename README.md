@@ -12,11 +12,11 @@ Installation via composer:
 
 ## Howto
 
-Set the directory for emails
+Set the path for emails
 
-    \Skeleton\Email\Config::$email_directory = $some_very_cool_directory;
+    \Skeleton\Email\Config::$email_path = $some_very_cool_directory;
 
-The email directory must have the following structure
+The email path must have the following structure
 
     - media
         - sample_media_dir1
