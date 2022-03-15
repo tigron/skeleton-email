@@ -265,7 +265,7 @@ class Email {
 	 */
 	public function add_template_path($path, $namespace = null, $prepend = false) {
 		$template_path = [
-			'directory' => $path,
+			'path' => $path,
 			'namespace' => $namespace
 		];
 
@@ -337,7 +337,7 @@ class Email {
 		}
 
 		foreach ($this->template_paths as $template_paths) {
-			$template->add_template_path($template_paths['directory'], $template_paths['namespace']);
+			$template->add_template_path($template_paths['path'], $template_paths['namespace']);
 		}
 
 		foreach ($this->assigns as $key => $value) {
