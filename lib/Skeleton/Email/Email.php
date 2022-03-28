@@ -337,7 +337,7 @@ class Email {
 		}
 
 		foreach ($this->template_paths as $template_paths) {
-			$template->add_template_path($template_paths['path'], $template_paths['namespace']);
+			$template->add_template_directory($template_paths['path'], $template_paths['namespace']);
 		}
 
 		foreach ($this->assigns as $key => $value) {
