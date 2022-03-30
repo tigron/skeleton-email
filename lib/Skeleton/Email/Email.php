@@ -318,6 +318,13 @@ class Email {
 	 * @access public
 	 */
 	public function send() {
+		/**
+		 * @Deprecated: for backwards compatibility
+		 */
+		if (!isset(Config::$email_path) and isset(Config::$email_directory)) {
+			Config::$email_path = Config::$email_directory;
+		}
+	
 		$errors = [];
 		if (!$this->validate($errors)) {
 			throw new \Exception('Cannot send email, Mail not validated. Errored fields: ' . implode(', ', $errors));
@@ -333,7 +340,7 @@ class Email {
 		}
 
 		if (count($this->template_paths) == 0) {
-			$this->add_template_path(Config::$email_email . '/template/');
+			$this->add_template_path(Config::$email_path . '/template/');
 		}
 
 		foreach ($this->template_paths as $template_paths) {
