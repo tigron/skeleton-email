@@ -86,6 +86,14 @@ class Email {
 	private $template_paths = [];
 
 	/**
+	 * Headers
+	 *
+	 * @access private
+	 * @var array $headers
+	 */
+	private $headers = [];
+
+	/**
 	 * Constructor
 	 *
 	 * @access public
@@ -313,6 +321,34 @@ class Email {
 	}
 
 	/**
+	 * Add header.
+	 *
+	 * @access public
+	 * @param string $key
+	 * @param string $value
+	 */
+	public function add_header(string $key, string $value) {
+		$this->headers[$key] = $value;
+	}
+
+	/**
+	 * Get headers.
+	 *
+	 * @access public
+	 * @return array $headers
+	 */
+	public function get_headers() {
+		if (empty(\Skeleton\Email\Config::$email_type_header) === false) {
+			/**
+			 * @Deprecated: for backwards compatibility
+			 */
+			$this->add_header(\Skeleton\Email\Config::$email_type_header, $this->type);
+		}
+
+		return $this->headers;
+	}
+
+	/**
 	 * Send email
 	 *
 	 * @access public
@@ -324,7 +360,7 @@ class Email {
 		if (!isset(Config::$email_path) and isset(Config::$email_directory)) {
 			Config::$email_path = Config::$email_directory;
 		}
-	
+
 		$errors = [];
 		if (!$this->validate($errors)) {
 			throw new \Exception('Cannot send email, Mail not validated. Errored fields: ' . implode(', ', $errors));
@@ -395,10 +431,10 @@ class Email {
 
 		$message->subject(trim($template->render( $this->type . '/subject.twig' )));
 
-		// Add header
-		if (isset(\Skeleton\Email\Config::$email_type_header) AND \Skeleton\Email\Config::$email_type_header !== null) {
-			$headers = $message->getHeaders();
-			$headers->addTextHeader(\Skeleton\Email\Config::$email_type_header, $this->type);
+		// Add headers
+		$headers = $message->getHeaders();
+		foreach ($this->get_headers() as $header_key => $header_value) {
+			$headers->addTextHeader($header_key, $header_value);
 		}
 
 		// Set sender
