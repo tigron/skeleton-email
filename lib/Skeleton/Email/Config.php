@@ -12,12 +12,13 @@ namespace Skeleton\Email;
 class Config {
 
 	/**
-	 * The email directory
+	 * The email path
 	 *
 	 * @access public
-	 * @var string $email_directory
+	 * @var string $email_path
 	 */
-	public static $email_directory = null;
+	public static $email_path = null;
+	public static $email_directory = null; // @Deprecated
 
 	/**
 	 * Archive mailbox
