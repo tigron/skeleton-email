@@ -32,10 +32,10 @@ class Email {
 	/**
 	 * Recipients
 	 *
-	 * @access private
+	 * @access protected
 	 * @var array $recipients
 	 */
-	private $recipients = [];
+	protected $recipients = [];
 
 	/**
 	 * Reply to
