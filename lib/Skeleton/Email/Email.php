@@ -349,11 +349,11 @@ class Email {
 	}
 
 	/**
-	 * Send email
+	 * Build email
 	 *
 	 * @access public
 	 */
-	public function send() {
+	public function build() {
 		/**
 		 * @Deprecated: for backwards compatibility
 		 */
@@ -366,10 +366,12 @@ class Email {
 			throw new \Exception('Cannot send email, Mail not validated. Errored fields: ' . implode(', ', $errors));
 		}
 
+		// archive mailbox ?
 		if (Config::$archive_mailbox !== null) {
 			$this->add_bcc(Config::$archive_mailbox);
 		}
 
+		// preparing template
 		$template = new \Skeleton\Template\Template();
 		if ($this->translation !== null) {
 			$template->set_translation($this->translation);
@@ -383,45 +385,12 @@ class Email {
 			$template->add_template_path($template_paths['path'], $template_paths['namespace']);
 		}
 
+		// assigning objects to template
 		foreach ($this->assigns as $key => $value) {
 			$template->assign($key, $value);
 		}
 
-		if (Config::$transport_type == 'smtp') {
-			$settings = Config::$transport_smtp_config;
-			if (
-				isset($settings['host']) === false
-				|| isset($settings['port']) === false
-			) {
-				throw new \Exception('Not all smtp settings are provided');
-			}
-
-			$encryption = null;
-			if (isset($settings['encryption']) && in_array($settings['encryption'], ['ssl', 'tls'])) {
-				$encryption = $settings['encryption'];
-			}
-
-			$socket_stream = new \Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream();
-			$host = 'localhost';
-			if (isset($settings['host'])) {
-				$host = $settings['host'];
-			}
-			$port = 25;
-			if (isset($settings['port'])) {
-				$port = $settings['port'];
-			}
-			$transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport($host, $port);
-
-			if (isset($settings['username']) && $settings['password']) {
-				$transport->setUsername($settings['username']);
-				$transport->setPassword($settings['password']);
-			}
-		} else {
-			// We use a local fork of the Sendmail transport
-			// See Transport\Sendmail for details
-			$transport = new Transport\Sendmail(Config::$transport_sendmail_command);
-		}
-		$mailer = new \Symfony\Component\Mailer\Mailer($transport);
+		// building Email message
 		$message = new \Symfony\Component\Mime\Email();
 
 		try {
@@ -429,6 +398,7 @@ class Email {
 			$message->text($template->render( $this->type . '/text.twig'));
 		} catch (\Skeleton\Template\Exception\Loader $e) {}
 
+		// set subject
 		$message->subject(trim($template->render( $this->type . '/subject.twig' )));
 
 		// Add headers
@@ -462,23 +432,8 @@ class Email {
 			}
 		}
 
-		// Remove duplicate recipients, in order of importance
-		$types = ['bcc', 'cc', 'to'];
-		foreach ($types as $type) {
-			array_shift($types);
-
-			if (count($types) === 0) {
-				continue;
-			}
-
-			if (isset($this->recipients[$type])) {
-				foreach ($this->recipients[$type] as $key => $recipient) {
-					if ($this->addressee_exists($recipient['email'], $types)) {
-						unset($this->recipients[$type][$key]);
-					}
-				}
-			}
-		}
+		// cleanup duplicates in recipients
+		$this->cleanup_recipients();
 
 		// Add recipients
 		foreach ($this->recipients as $type => $recipients) {
@@ -522,8 +477,38 @@ class Email {
 			}
 		}
 
+		// attachments
 		$this->add_html_images($message);
 		$this->attach_files($message);
+
+		unset($template);
+
+		if (isset($envelope)) {
+			return [ 'message' => $message, 'envelope' => $envelope ];
+		} else {
+			return [ 'message' => $message ];
+		}
+	}
+
+	/**
+	 * Send email
+	 *
+	 * @access public
+	 */
+	public function send() {
+
+		// creating transport
+		$transport = $this->create_transport();
+
+		// preparing mailer
+		$mailer = new \Symfony\Component\Mailer\Mailer($transport);
+
+		// build mail message and envelope
+		$mail = $this->build();
+		$message = $mail['message'];
+		if (isset($mail['envelope'])) {
+			$envelope = $mail['envelope'];
+		}
 
 		// If we have no recipients in the message, and strict validation is
 		// disabled, and we do have recipients locally, fail silently. This means
@@ -536,13 +521,12 @@ class Email {
 				return;
 			}
 
+		// send the email
 		if (isset($envelope)) {
 			$mailer->send($message, $envelope);
 		} else {
 			$mailer->send($message);
 		}
-
-		unset($template);
 	}
 
 	/**
@@ -641,5 +625,76 @@ class Email {
 		}
 
 		return false;
+	}
+
+	/**
+	 * create transport
+	 *
+	 * @access private
+	 * @return \Symfony\Component\Mailer\Transport
+	 */
+	private function create_transport() {
+		// setting-up transport
+		if (Config::$transport_type == 'smtp') {
+			$settings = Config::$transport_smtp_config;
+			if (
+				isset($settings['host']) === false
+				|| isset($settings['port']) === false
+			) {
+				throw new \Exception('Not all smtp settings are provided');
+			}
+
+			$encryption = null;
+			if (isset($settings['encryption']) && in_array($settings['encryption'], ['ssl', 'tls'])) {
+				$encryption = $settings['encryption'];
+			}
+
+			$socket_stream = new \Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream();
+			$host = 'localhost';
+			if (isset($settings['host'])) {
+				$host = $settings['host'];
+			}
+			$port = 25;
+			if (isset($settings['port'])) {
+				$port = $settings['port'];
+			}
+			$transport = new \Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport($host, $port);
+
+			if (isset($settings['username']) && $settings['password']) {
+				$transport->setUsername($settings['username']);
+				$transport->setPassword($settings['password']);
+			}
+		} else {
+			// We use a local fork of the Sendmail transport
+			// See Transport\Sendmail for details
+			$transport = new Transport\Sendmail(Config::$transport_sendmail_command);
+		}
+
+		return $transport;
+	}
+
+	/**
+	 * cleanup recipients
+	 *
+	 * @access private
+	 */
+	private function cleanup_recipients() {
+		// Remove duplicate recipients, in order of importance
+		$types = ['bcc', 'cc', 'to'];
+		foreach ($types as $type) {
+			array_shift($types);
+
+			if (count($types) === 0) {
+				continue;
+			}
+
+			if (isset($this->recipients[$type])) {
+				foreach ($this->recipients[$type] as $key => $recipient) {
+					if ($this->addressee_exists($recipient['email'], $types)) {
+						unset($this->recipients[$type][$key]);
+					}
+				}
+			}
+		}
 	}
 }
