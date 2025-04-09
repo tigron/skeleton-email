@@ -38,6 +38,14 @@ class Email {
 	private $envelope_from = null;
 
 	/**
+	 * Envelope to
+	 *
+	 * @access private
+	 * @var array $envelope_to
+	 */
+	private $envelope_to = [];
+
+	/**
 	 * Recipients
 	 *
 	 * @access protected
@@ -240,17 +248,34 @@ class Email {
 	}
 
 	/**
-	 * set_envelope_from
+	 * Set 'envelope from'
 	 *
 	 * @param string $email
-	 * @param string $address
 	 */
 	public function set_envelope_from($email) {
-		$this->envelope_from = [
-			'email' => $email
+		$this->envelope_from = $email;
+	}
+
+	/**
+	 * Add 'envelope to'
+	 *
+	 * @access public
+	 * @param string $email
+	 * @param ?string $name
+	 */
+	public function add_envelope_to(string $email, ?string $name = null): void {
+		$this->envelope_to[] = [
+			'email' => $email,
+			'name' => $name,
 		];
 	}
 
+	/**
+	 * Reset 'envelope to' list
+	 */
+	public function reset_envelope_to(): void {
+		$this->envelope_to = [];
+	}
 
 	/**
 	 * Assign
@@ -394,12 +419,12 @@ class Email {
 		$message = new \Symfony\Component\Mime\Email();
 
 		try {
-			$message->html($template->render( $this->type . '/html.twig'));
-			$message->text($template->render( $this->type . '/text.twig'));
+			$message->html($template->render($this->type . '/html.twig'));
+			$message->text($template->render($this->type . '/text.twig'));
 		} catch (\Skeleton\Template\Exception\Loader $e) {}
 
 		// set subject
-		$message->subject(trim($template->render( $this->type . '/subject.twig' )));
+		$message->subject(trim($template->render($this->type . '/subject.twig')));
 
 		// Add headers
 		$headers = $message->getHeaders();
@@ -408,28 +433,38 @@ class Email {
 		}
 
 		// Set sender
-		if (isset($this->sender['name'])) {
-			$message->addFrom(new \Symfony\Component\Mime\Address($this->sender['email'], $this->sender['name']));
-		} else {
-			$message->addFrom($this->sender['email']);
-		}
+		$this->sender['name'] = $this->sender['name'] ?? '';
+		$message->addFrom(
+			new \Symfony\Component\Mime\Address(
+				$this->sender['email'], $this->sender['name']
+			)
+		);
 
-		if (isset($this->envelope_from['email'])) {
-			$envelope =  new \Symfony\Component\Mailer\Envelope(
-				new \Symfony\Component\Mime\Address($this->envelope_from['email']),
-				[
-					new \Symfony\Component\Mime\Address($this->envelope_from['email']),
-				]
+		// Set envelope
+		$envelope = null;
+		if (empty($this->envelope_from) !== true && empty($this->envelope_to) !== true) {
+			$envelope_recipients = [];
+			foreach ($this->envelope_to as $envelope_recipient) {
+				$envelope_recipient['name'] = $recipient['name'] ?? '';
+				$envelope_recipients[] = new \Symfony\Component\Mime\Address(
+					$envelope_recipient['email'], $envelope_recipient['name']
+				);
+			}
+
+			$envelope = new \Symfony\Component\Mailer\Envelope(
+				new \Symfony\Component\Mime\Address($this->envelope_from),
+				$envelope_recipients
 			);
 		}
 
 		// Set reply to
 		foreach ($this->reply_to as $reply_to) {
-			if (isset($reply_to['name'])) {
-				$message->addReplyTo(new \Symfony\Component\Mime\Address($reply_to['email'], $reply_to['name']));
-			} else {
-				$message->addReplyTo($reply_to['email']);
-			}
+			$reply_to['name'] = $reply_to['name'] ?? '';
+			$message->addReplyTo(
+				new \Symfony\Component\Mime\Address(
+					$reply_to['email'], $reply_to['name']
+				)
+			);
 		}
 
 		// cleanup duplicates in recipients
@@ -483,11 +518,7 @@ class Email {
 
 		unset($template);
 
-		if (isset($envelope)) {
-			return [ 'message' => $message, 'envelope' => $envelope ];
-		} else {
-			return [ 'message' => $message ];
-		}
+		return ['message' => $message, 'envelope' => $envelope];
 	}
 
 	/**
@@ -506,27 +537,28 @@ class Email {
 		// build mail message and envelope
 		$mail = $this->build();
 		$message = $mail['message'];
-		if (isset($mail['envelope'])) {
-			$envelope = $mail['envelope'];
-		}
+		$envelope = $mail['envelope'];
 
 		// If we have no recipients in the message, and strict validation is
 		// disabled, and we do have recipients locally, fail silently. This means
 		// all recipients set by the user were invalid.
 		if (
-			(count($message->getTo()) < 1 and count($message->getCc()) < 1 and count($message->getBcc()) < 1) and
-			(isset($this->recipients) and count($this->recipients) > 0) and
-			Config::$strict_address_validation === false
-			) {
-				return;
-			}
+			(
+				count($message->getTo()) < 1
+				&& count($message->getCc()) < 1
+				&& count($message->getBcc()) < 1
+			)
+			&& (
+				isset($this->recipients) === true
+				&& count($this->recipients) > 0
+			)
+			&& Config::$strict_address_validation === false
+		) {
+			return;
+		}
 
 		// send the email
-		if (isset($envelope)) {
-			$mailer->send($message, $envelope);
-		} else {
-			$mailer->send($message);
-		}
+		$mailer->send($message, $envelope);
 	}
 
 	/**

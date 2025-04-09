@@ -3,9 +3,9 @@
     "description": "Email infrastructure for skeleton",
     "type": "library",
     "require": {
-        "php": ">=7.0.0",
+        "php": ">=8.2.0",
         "tigron/skeleton-template": "*",
-        "symfony/mailer": "^5.4"
+        "symfony/mailer": "^7.2"
     },
     "license": "MIT",
     "authors": [

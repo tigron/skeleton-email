@@ -47,9 +47,9 @@ use Symfony\Component\Mime\RawMessage;
  */
 class Sendmail extends \Symfony\Component\Mailer\Transport\AbstractTransport
 {
-	private $command = '/usr/sbin/sendmail -bs';
-	private $stream;
-	private $transport;
+	private string $command = '/usr/sbin/sendmail -bs';
+	private ProcessStream $stream;
+	private ?SmtpTransport $transport = null;
 
 	/**
 	 * Constructor.
@@ -60,12 +60,17 @@ class Sendmail extends \Symfony\Component\Mailer\Transport\AbstractTransport
 	 *
 	 * The recommended mode is "-bs" since it is interactive and failure notifications are hence possible.
 	 */
-	public function __construct(string $command = null, EventDispatcherInterface $dispatcher = null, LoggerInterface $logger = null) {
+	public function __construct(?string $command = null, ?EventDispatcherInterface $dispatcher = null, ?LoggerInterface $logger = null) {
 		parent::__construct($dispatcher, $logger);
 
 		if (null !== $command) {
 			if (!str_contains($command, ' -bs') && !str_contains($command, ' -t')) {
-				throw new \InvalidArgumentException(sprintf('Unsupported sendmail command flags "%s"; must be one of "-bs" or "-t" but can include additional flags.', $command));
+				throw new \Symfony\Component\Mailer\Exception\InvalidArgumentException(
+					sprintf(
+						'Unsupported sendmail command flags "%s"; must be one of "-bs" or "-t" but can include additional flags.',
+						$command
+					)
+				);
 			}
 
 			$this->command = $command;
@@ -74,11 +79,12 @@ class Sendmail extends \Symfony\Component\Mailer\Transport\AbstractTransport
 		$this->stream = new ProcessStream();
 		if (str_contains($this->command, ' -bs')) {
 			$this->stream->setCommand($this->command);
+			$this->stream->setInteractive(true);
 			$this->transport = new SmtpTransport($this->stream, $dispatcher, $logger);
 		}
 	}
 
-	public function send(RawMessage $message, Envelope $envelope = null): ?SentMessage {
+	public function send(RawMessage $message, ?Envelope $envelope = null): ?SentMessage {
 		if ($this->transport) {
 			return $this->transport->send($message, $envelope);
 		}
@@ -98,14 +104,23 @@ class Sendmail extends \Symfony\Component\Mailer\Transport\AbstractTransport
 		$this->getLogger()->debug(sprintf('Email transport "%s" starting', __CLASS__));
 
 		$command = $this->command;
+
+		if ($recipients = $message->getEnvelope()->getRecipients()) {
+			$command = str_replace(' -t', '', $command);
+		}
+
 		if (!str_contains($command, ' -f')) {
-			$command .= ' -f'.escapeshellarg($message->getEnvelope()->getSender()->getEncodedAddress());
+			$command .= ' -f' . escapeshellarg($message->getEnvelope()->getSender()->getEncodedAddress());
 		}
 
 		$chunks = AbstractStream::replace("\r\n", "\n", $message->toIterable());
 
 		if (!str_contains($command, ' -i') && !str_contains($command, ' -oi')) {
 			$chunks = AbstractStream::replace("\n.", "\n..", $chunks);
+		}
+
+		foreach ($recipients as $recipient) {
+			$command .= ' ' . escapeshellarg($recipient->getEncodedAddress());
 		}
 
 		$this->stream->setCommand($command);
@@ -119,16 +134,18 @@ class Sendmail extends \Symfony\Component\Mailer\Transport\AbstractTransport
 					$this->stream->write('Bcc:'.$recipient->toString()."\n");
 				}
 			}
-		} else {
+		} elseif (str_contains($command, ' -bs') === true) {
 			// See if we can come up with a better fix than the one suggested:
 			// https://github.com/symfony/symfony/pull/39744
 			//
 			// As we don't currently use this, delay support until we need it
-			throw new \TransportException(sprintf('The -bs sendmail command flag is currently not fully supported "%s".', $command));
+			throw new \Symfony\Component\Mailer\Exception\TransportException(
+				sprintf('The -bs sendmail command flag is currently not fully supported "%s".', $command)
+			);
 		}
 
 		foreach ($chunks as $chunk) {
-			$this->stream->write($chunk);
+			$this->stream->write($chunk, false);
 		}
 
 		$this->stream->flush();
