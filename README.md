@@ -65,11 +65,13 @@ Create a new mail:
 
     /**
      * Optional: override any other recipient set in the code
+     * if used, 'envelope_from' is also required
      */
     $email->add_envelope_to('to@example.com' [, 'to name' ]);
 
     /**
      * Optional: override any other sender set in the code
+     * if used, 'envelope_to' is also required
      */
     $email->set_envelope_from('from@example.com' [, 'from name' ]);
 
