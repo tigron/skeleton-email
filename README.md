@@ -64,6 +64,21 @@ Create a new mail:
     $email->add_bcc('bcc@example.com' [, 'bcc name' ]);
 
     /**
+     * Optional: override any other recipient set in the code
+     */
+    $email->add_envelope_to('to@example.com' [, 'to name' ]);
+
+    /**
+     * Optional: override any other sender set in the code
+     */
+    $email->set_envelope_from('from@example.com' [, 'from name' ]);
+
+    /**
+     * Optional: remove all the envelope-to recipients
+     */
+    $email->reset_envelope_to();
+
+    /**
      * Optional: add reply-to recipient
      */
     $email->add_reply_to('reply-to@example.com' [, 'reply-to name' ]);
