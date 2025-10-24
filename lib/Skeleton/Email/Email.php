@@ -56,10 +56,10 @@ class Email {
 	/**
 	 * Reply to
 	 *
-	 * @access private
+	 * @access protected
 	 * @var array $reply_to
 	 */
-	private $reply_to = [];
+	protected $reply_to = [];
 
 	/**
 	 * Assigned variables
@@ -181,6 +181,15 @@ class Email {
 	}
 
 	/**
+	 * Clear bcc
+	 *
+	 * @access private
+	 */
+	public function clear_bcc() {
+		$this->recipients['bcc'] = [];
+	}
+
+	/**
 	 * Add reply to
 	 *
 	 * @access private
@@ -202,6 +211,15 @@ class Email {
 			'name' => $name,
 			'email' => strtolower($email),
 		];
+	}
+
+	/**
+	 * Clear reply to
+	 *
+	 * @access private
+	 */
+	public function clear_reply_to() {
+		$this->reply_to = [];
 	}
 
 	/**
