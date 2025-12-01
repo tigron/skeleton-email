@@ -12,6 +12,8 @@
 
 namespace Skeleton\Email;
 
+use Symfony\Component\Mailer\Envelope;
+
 class Email {
 	/**
 	 * Email type
@@ -33,7 +35,7 @@ class Email {
 	 * Envelope from
 	 *
 	 * @access private
-	 * @var array $envelope_from
+	 * @var string|null $envelope_from
 	 */
 	private $envelope_from = null;
 
@@ -460,7 +462,15 @@ class Email {
 
 		// Set envelope
 		$envelope = null;
-		if (empty($this->envelope_from) !== true && empty($this->envelope_to) !== true) {
+		if (empty($this->envelope_from) !== true || empty($this->envelope_to) !== true) {
+			$envelope = Envelope::create($message);
+
+			if (empty($this->envelope_from) !== true) {
+				$envelope->setSender(
+					new \Symfony\Component\Mime\Address($this->envelope_from)
+				);
+			}
+
 			$envelope_recipients = [];
 			foreach ($this->envelope_to as $envelope_recipient) {
 				$envelope_recipient['name'] = $recipient['name'] ?? '';
@@ -469,10 +479,9 @@ class Email {
 				);
 			}
 
-			$envelope = new \Symfony\Component\Mailer\Envelope(
-				new \Symfony\Component\Mime\Address($this->envelope_from),
-				$envelope_recipients
-			);
+			if (count($envelope_recipients) > 0) {
+				$envelope->setRecipients($envelope_recipients);
+			}
 		}
 
 		// Set reply to
